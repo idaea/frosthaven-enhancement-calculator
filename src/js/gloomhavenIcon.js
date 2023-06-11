@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import { Component } from "react";
 
 import elementAir from "../images/icons/elements/fh-air-color-icon.png";
 import elementAll from "../images/icons/elements/fh-wild-color-icon.png";

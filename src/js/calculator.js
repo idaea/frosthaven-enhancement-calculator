@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import { Component } from "react";
 import { Container, Row, Col, Button, Badge } from "react-bootstrap";
 import GloomhavenIcon from "./gloomhavenIcon";
 
@@ -536,23 +536,22 @@ class EnhancementCalculatorComponent extends Component {
 									Some enhancements do not fall neatly into the
 									categories on the cost chart. When determining their
 									base cost, treat damage traps as "
-									<img
-										alt="Attack Icon"
-										src="./images/fh-attack-bw-icon.png"
-										width={"12px"}
+									<GloomhavenIcon
+										icon="generalAttack"
+										width="12px"
 									/>{" "}
 									+1" enhancements (50 gold), treat healing traps as "
-									<img
+									<GloomhavenIcon
 										alt="Heal Icon"
-										src="./images/fh-heal-bw-icon.png"
-										width={"12px"}
+										icon="generalHeal"
+										width="12px"
 									/>{" "}
 									+1" enhancements (30 gold), and treat the movement of
 									tokens and tiles as "
-									<img
+									<GloomhavenIcon
 										alt="Move Icon"
-										src="./images/fh-move-bw-icon.png"
-										width={"12px"}
+										icon="generalMove"
+										width="12px"
 									/>{" "}
 									+1" enhancements (30 gold).
 								</p>
