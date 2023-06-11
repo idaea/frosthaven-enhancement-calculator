@@ -1,5 +1,5 @@
 import { ReactElement, ReactNode, useState } from "react";
-import { Container, Row, Col, Button, Badge } from "react-bootstrap";
+import { Container, Row, Col, Button, Badge, Form } from "react-bootstrap";
 import GloomhavenIcon from "./gloomhavenIcon";
 import { capitalCase, pascalCase } from "change-case";
 import { mapValues } from "lodash";
@@ -110,10 +110,10 @@ const stickerTypes = {
 	otherEffect: { title: "Other Effect" },
 };
 
-interface Props {}
 export function EnhancementCalculator() {
-	const [stickerType, setStickerType] = useState(""); // +1 / summon +1 / attack hex / else
-	const [playerPlusOneAbility, setPlayerPlusOneAbility] = useState("");
+	const [selectedStickerType, setSelectedStickerType] = useState(""); // +1 / summon +1 / attack hex / else
+	const [selectedPlayerPlusOneEffect, setSelectedPlayerPlusOneEffect] =
+		useState("");
 	const [baseOtherEffect, setBaseOtherEffect] = useState("");
 	const [summonPlusOneAbility, setSummonPlusOneAbility] = useState("");
 	const [numberOfCurrentlyTargetedHexes, setNumberOfCurrentlyTargetedHexes] =
@@ -124,9 +124,10 @@ export function EnhancementCalculator() {
 	const [multipleTargets, setMultipleTargets] = useState(false);
 	const [lostCard, setLostCard] = useState(false);
 	const [persistentBonus, setPersistentBonus] = useState(false);
+	const [useLowCosts, setUseLowCosts] = useState(false);
 
 	function doubleMultipleTargets() {
-		if (stickerType === "attackHex") {
+		if (selectedStickerType === "attackHex") {
 			return false;
 		}
 
@@ -138,37 +139,54 @@ export function EnhancementCalculator() {
 			return false;
 		}
 
-		if (playerPlusOneAbility === "target") {
+		if (selectedPlayerPlusOneEffect === "target") {
 			return false;
 		}
 
 		return true;
 	}
 
+	function getEffectCost(effect: Effect): number {
+		return useLowCosts ? effect.costLow : effect.cost;
+	}
+
+	function getScaledCost(
+		costVariants: { default: number[]; low: number[] },
+		i: number
+	): number {
+		return (useLowCosts ? costVariants.low : costVariants.default)[i];
+	}
+
 	function calculateCost() {
 		let cost = 0;
 
-		if (stickerType === "playerPlus1") {
-			if (playerPlusOneAbility) {
-				cost += playerPlusOneAbilityLines[playerPlusOneAbility].cost;
+		if (selectedStickerType === "playerPlus1") {
+			if (selectedPlayerPlusOneEffect) {
+				cost += getEffectCost(
+					playerPlusOneAbilityLines[selectedPlayerPlusOneEffect]
+				);
 			} else {
 				// cannot yet calculate
 				return 0;
 			}
-		} else if (stickerType === "summonPlus1") {
+		} else if (selectedStickerType === "summonPlus1") {
 			if (summonPlusOneAbility) {
-				cost += summonPlusOneAbilityLines[summonPlusOneAbility].cost;
+				cost += getEffectCost(
+					summonPlusOneAbilityLines[summonPlusOneAbility]
+				);
 			} else {
 				// cannot yet calculate
 				return 0;
 			}
-		} else if (stickerType === "attackHex") {
+		} else if (selectedStickerType === "attackHex") {
 			cost += Math.floor(
-				baseNewAttackHexCost.default / numberOfCurrentlyTargetedHexes
+				(useLowCosts
+					? baseNewAttackHexCost.low
+					: baseNewAttackHexCost.default) / numberOfCurrentlyTargetedHexes
 			);
-		} else if (stickerType === "otherEffect") {
+		} else if (selectedStickerType === "otherEffect") {
 			if (baseOtherEffect) {
-				cost += baseOtherEffects[baseOtherEffect].cost;
+				cost += getEffectCost(baseOtherEffects[baseOtherEffect]);
 			} else {
 				// cannot yet calculate
 				return 0;
@@ -189,24 +207,27 @@ export function EnhancementCalculator() {
 		}
 
 		// triple BASE COST if persistent bonus
-		if (persistentBonus && stickerType !== "summonPlus1") {
+		if (persistentBonus && selectedStickerType !== "summonPlus1") {
 			cost *= 3;
 		}
 
 		// extra cost for level of ability card
-		cost += levelCost.default[levelOfAbilityCard - 1];
+		cost += getScaledCost(levelCost, levelOfAbilityCard - 1);
 
 		// extra cost for previous enhancements to the same action
-		cost += previousEnhancementCost.default[numberOfPreviousEnhancements];
+		cost += getScaledCost(
+			previousEnhancementCost,
+			numberOfPreviousEnhancements
+		);
 
 		return cost;
 	}
 
 	function stickerTypeClick(stickerType) {
-		if (stickerType === stickerType) {
-			setStickerType("");
+		if (stickerType === selectedStickerType) {
+			setSelectedStickerType("");
 		} else {
-			setStickerType(stickerType);
+			setSelectedStickerType(stickerType);
 		}
 	}
 
@@ -227,49 +248,25 @@ export function EnhancementCalculator() {
 	}
 
 	function playerPlusOneAbilityClick(abilityLine) {
-		if (playerPlusOneAbility === abilityLine) {
-			setPlayerPlusOneAbility("");
+		if (selectedPlayerPlusOneEffect === abilityLine) {
+			setSelectedPlayerPlusOneEffect("");
 		} else {
-			setPlayerPlusOneAbility(abilityLine);
+			setSelectedPlayerPlusOneEffect(abilityLine);
 		}
 	}
 
-	function levelClick(level) {
-		setLevelOfAbilityCard(level);
-	}
-
-	function numberOfHexesClick(hexes) {
-		setNumberOfCurrentlyTargetedHexes(hexes);
-	}
-
-	function previousEnhancementClick(number) {
-		setNumberOfPreviousEnhancements(number);
-	}
-
-	function multipleTargetClick() {
-		setMultipleTargets(!multipleTargets);
-	}
-
-	function persistentBonusClick() {
-		setPersistentBonus(!persistentBonus);
-	}
-
-	function lostCardClick() {
-		setLostCard(!lostCard);
-	}
-
 	function showOtherOptions() {
-		if (stickerType === "playerPlus1") {
-			if (playerPlusOneAbility) {
+		if (selectedStickerType === "playerPlus1") {
+			if (selectedPlayerPlusOneEffect) {
 				return true;
 			}
-		} else if (stickerType === "summonPlus1") {
+		} else if (selectedStickerType === "summonPlus1") {
 			if (summonPlusOneAbility) {
 				return true;
 			}
-		} else if (stickerType === "attackHex") {
+		} else if (selectedStickerType === "attackHex") {
 			return true;
-		} else if (stickerType === "otherEffect") {
+		} else if (selectedStickerType === "otherEffect") {
 			if (baseOtherEffect) {
 				return true;
 			}
@@ -304,7 +301,7 @@ export function EnhancementCalculator() {
 				<Button
 					variant="outline-secondary"
 					block
-					onClick={() => numberOfHexesClick(i)}
+					onClick={() => setNumberOfCurrentlyTargetedHexes(i)}
 					className={
 						numberOfCurrentlyTargetedHexes === i ? "active" : undefined
 					}
@@ -322,12 +319,12 @@ export function EnhancementCalculator() {
 				<Button
 					variant="outline-secondary"
 					block
-					onClick={() => previousEnhancementClick(i)}
+					onClick={() => setNumberOfPreviousEnhancements(i)}
 					className={
 						numberOfPreviousEnhancements === i ? "active" : undefined
 					}
 				>
-					{i} (+{previousEnhancementCost.default[i]}g)
+					{i} (+{getScaledCost(previousEnhancementCost, i)}g)
 				</Button>
 			</Col>
 		);
@@ -346,10 +343,10 @@ export function EnhancementCalculator() {
 				<Button
 					variant="outline-secondary"
 					block
-					onClick={() => levelClick(i)}
+					onClick={() => setLevelOfAbilityCard(i)}
 					className={levelOfAbilityCard === i ? "active" : undefined}
 				>
-					{i} (+{levelCost.default[i - 1]}g)
+					{i} (+{getScaledCost(levelCost, i - 1)}g)
 				</Button>
 			</Col>
 		);
@@ -382,7 +379,9 @@ export function EnhancementCalculator() {
 						variant="outline-secondary"
 						block
 						onClick={() => stickerTypeClick(stickerType)}
-						className={stickerType === stickerType ? "active" : undefined}
+						className={
+							stickerType === selectedStickerType ? "active" : undefined
+						}
 					>
 						{type.title} {icons}
 					</Button>
@@ -391,26 +390,26 @@ export function EnhancementCalculator() {
 		}
 	}
 
-	for (let baseOtherEffect in baseOtherEffects) {
-		if (baseOtherEffects.hasOwnProperty(baseOtherEffect)) {
-			let effect = baseOtherEffects[baseOtherEffect];
+	for (let baseOtherEffectKey in baseOtherEffects) {
+		if (baseOtherEffects.hasOwnProperty(baseOtherEffectKey)) {
+			let effect = baseOtherEffects[baseOtherEffectKey];
 
 			let xs = 6;
 			let md = 3;
 			if (
-				baseOtherEffect === "specificElement" ||
-				baseOtherEffect === "anyElement" ||
-				baseOtherEffect === "jump"
+				baseOtherEffectKey === "specificElement" ||
+				baseOtherEffectKey === "anyElement" ||
+				baseOtherEffectKey === "jump"
 			) {
 				xs = 12;
 			}
 
-			if (baseOtherEffect === "specificElement") {
+			if (baseOtherEffectKey === "specificElement") {
 				md = 6;
 			}
 
 			let icons = <GloomhavenIcon icon={effect.icon} width={iconWidth} />;
-			if (baseOtherEffect === "specificElement") {
+			if (baseOtherEffectKey === "specificElement") {
 				icons = (
 					<span>
 						<GloomhavenIcon icon="elementAir" width={iconWidth} />
@@ -426,19 +425,21 @@ export function EnhancementCalculator() {
 			baseOtherEffectColumns.push(
 				<Col
 					className="enhancement-col"
-					key={baseOtherEffect}
+					key={baseOtherEffectKey}
 					xs={xs}
 					md={md}
 				>
 					<Button
 						variant="outline-secondary"
 						block
-						onClick={() => baseOtherEffectClick(baseOtherEffect)}
+						onClick={() => baseOtherEffectClick(baseOtherEffectKey)}
 						className={
-							baseOtherEffect === baseOtherEffect ? "active" : undefined
+							baseOtherEffectKey === baseOtherEffect
+								? "active"
+								: undefined
 						}
 					>
-						{effect.title} {icons} ({effect.cost}g)
+						{effect.title} {icons} ({getEffectCost(effect)}g)
 					</Button>
 				</Col>
 			);
@@ -463,14 +464,14 @@ export function EnhancementCalculator() {
 							playerPlusOneAbilityClick(playerPlusOneAbilityLine)
 						}
 						className={
-							playerPlusOneAbility === playerPlusOneAbilityLine
+							selectedPlayerPlusOneEffect === playerPlusOneAbilityLine
 								? "active"
 								: undefined
 						}
 					>
 						{ability.title}{" "}
 						<GloomhavenIcon icon={ability.icon} width={iconWidth} /> (
-						{ability.cost}g)
+						{getEffectCost(ability)}g)
 					</Button>
 				</Col>
 			);
@@ -502,7 +503,7 @@ export function EnhancementCalculator() {
 					>
 						{ability.title}{" "}
 						<GloomhavenIcon icon={ability.icon} width={iconWidth} /> (
-						{ability.cost}g)
+						{getEffectCost(ability)}g)
 					</Button>
 				</Col>
 			);
@@ -514,43 +515,55 @@ export function EnhancementCalculator() {
 			<Container className="enhancement-container">
 				<Row className="hidden-xs">
 					<Col xs={12} md={12}>
-						<blockquote>
-							<p>
-								Adapted from:{" "}
-								<a href="https://ninjawithkillmoon.github.io/utilities/enhancementCalculator">
-									The Arcane Library - Enhancement Calculator
-								</a>
-								.{" "}
-								<a href="https://github.com/pikdonker/frosthaven-enhancement-calculator">
-									Source
-								</a>
-							</p>
-							<p>
-								Each type of enhancement has a base cost. The cost might
-								then be modified based on which ability is being
-								enhanced.
-							</p>
-							<p>
-								Some enhancements do not fall neatly into the categories
-								on the cost chart. When determining their base cost,
-								treat damage traps as "
-								<GloomhavenIcon icon="generalAttack" width="12px" /> +1"
-								enhancements (50 gold), treat healing traps as "
-								<GloomhavenIcon
-									alt="Heal Icon"
-									icon="generalHeal"
-									width="12px"
-								/>{" "}
-								+1" enhancements (30 gold), and treat the movement of
-								tokens and tiles as "
-								<GloomhavenIcon
-									alt="Move Icon"
-									icon="generalMove"
-									width="12px"
-								/>{" "}
-								+1" enhancements (30 gold).
-							</p>
-						</blockquote>
+						<p>
+							Adapted from:{" "}
+							<a href="https://ninjawithkillmoon.github.io/utilities/enhancementCalculator">
+								The Arcane Library - Enhancement Calculator
+							</a>
+							.{" "}
+							<a href="https://github.com/pikdonker/frosthaven-enhancement-calculator">
+								Source
+							</a>
+						</p>
+						<p>
+							Each type of enhancement has a base cost. The cost might
+							then be modified based on which ability is being enhanced.
+						</p>
+						<p>
+							Some enhancements do not fall neatly into the categories on
+							the cost chart. When determining their base cost, treat
+							damage traps as "
+							<GloomhavenIcon icon="generalAttack" width="12px" /> +1"
+							enhancements (
+							{getEffectCost(playerPlusOneAbilityLines.attack)} gold),
+							treat healing traps as "
+							<GloomhavenIcon
+								alt="Heal Icon"
+								icon="generalHeal"
+								width="12px"
+							/>{" "}
+							+1" enhancements (
+							{getEffectCost(playerPlusOneAbilityLines.heal)} gold), and
+							treat the movement of tokens and tiles as "
+							<GloomhavenIcon
+								alt="Move Icon"
+								icon="generalMove"
+								width="12px"
+							/>{" "}
+							+1" enhancements (
+							{getEffectCost(playerPlusOneAbilityLines.move)} gold).
+						</p>
+						<Form>
+							<Form.Check
+								label="Use lower costs"
+								type="checkbox"
+								id="useLowerCosts"
+								checked={useLowCosts}
+								onChange={(x) => {
+									setUseLowCosts(x.target.checked);
+								}}
+							/>
+						</Form>
 					</Col>
 				</Row>
 
@@ -558,7 +571,7 @@ export function EnhancementCalculator() {
 
 				<Row>{enhancementTypeColumns}</Row>
 
-				{stickerType === "playerPlus1" && (
+				{selectedStickerType === "playerPlus1" && (
 					<div>
 						<hr />
 						{makeBadgeRow("Ability Line")}
@@ -566,7 +579,7 @@ export function EnhancementCalculator() {
 					</div>
 				)}
 
-				{stickerType === "summonPlus1" && (
+				{selectedStickerType === "summonPlus1" && (
 					<div>
 						<hr />
 						{makeBadgeRow("Enhancement Effect")}
@@ -574,7 +587,7 @@ export function EnhancementCalculator() {
 					</div>
 				)}
 
-				{stickerType === "attackHex" && (
+				{selectedStickerType === "attackHex" && (
 					<div>
 						<hr />
 						{makeBadgeRow(
@@ -584,7 +597,7 @@ export function EnhancementCalculator() {
 					</div>
 				)}
 
-				{stickerType === "otherEffect" && (
+				{selectedStickerType === "otherEffect" && (
 					<div>
 						<hr />
 						{makeBadgeRow("Base Effect")}
@@ -620,7 +633,7 @@ export function EnhancementCalculator() {
 									variant="outline-secondary"
 									disabled={!doubleMultipleTargets()}
 									block
-									onClick={() => multipleTargetClick()}
+									onClick={() => setMultipleTargets(!multipleTargets)}
 									className={multipleTargets ? "active" : undefined}
 								>
 									{multipleTargets ? "Yes (Double base cost)" : "No"}
@@ -654,7 +667,7 @@ export function EnhancementCalculator() {
 								<Button
 									variant="outline-secondary"
 									block
-									onClick={() => lostCardClick()}
+									onClick={() => setLostCard(!lostCard)}
 									className={lostCard ? "active" : undefined}
 								>
 									{lostCard ? "Yes (Halve base cost)" : "No"}
@@ -664,7 +677,7 @@ export function EnhancementCalculator() {
 					</div>
 				)}
 
-				{showOtherOptions() && stickerType !== "summonPlus1" && (
+				{showOtherOptions() && selectedStickerType !== "summonPlus1" && (
 					<div>
 						<hr />
 						<Row>
@@ -686,7 +699,7 @@ export function EnhancementCalculator() {
 								<Button
 									variant="outline-secondary"
 									block
-									onClick={() => persistentBonusClick()}
+									onClick={() => setPersistentBonus(!persistentBonus)}
 									className={persistentBonus ? "active" : undefined}
 								>
 									{persistentBonus ? "Yes (Triple base cost)" : "No"}
