@@ -80,26 +80,25 @@ const icons = {
 	generalTeleport: generalTeleport,
 	generalLost: generalLost,
 	generalPersistent: generalPersistent,
-};
+} as const;
 
-class GloomhavenIconComponent extends Component {
-	findIcon() {
-		return icons[this.props.icon];
-	}
-
-	render() {
-		return (
-			<img
-				src={this.findIcon()}
-				alt={this.props.icon}
-				className="gloomhaven-icon-img"
-				style={{
-					"max-width": this.props.width,
-					"max-height": this.props.width,
-				}}
-			/>
-		);
-	}
+interface Props {
+	readonly icon: keyof typeof icons;
+	readonly width: string;
+	readonly alt?: string;
+}
+function GloomhavenIconComponent({ icon, width, alt }: Props) {
+	return (
+		<img
+			src={icons[icon]}
+			alt={alt ?? icon}
+			className="gloomhaven-icon-img"
+			style={{
+				maxWidth: width,
+				maxHeight: width,
+			}}
+		/>
+	);
 }
 
 export default GloomhavenIconComponent;

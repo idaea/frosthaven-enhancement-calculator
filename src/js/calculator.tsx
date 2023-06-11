@@ -1,4 +1,4 @@
-import { Component } from "react";
+import { Component, ReactElement, ReactNode } from "react";
 import { Container, Row, Col, Button, Badge } from "react-bootstrap";
 import GloomhavenIcon from "./gloomhavenIcon";
 
@@ -66,9 +66,10 @@ const stickerTypes = {
 const levelCost = [0, 25, 50, 75, 100, 125, 150, 175, 200];
 const previousEnhancementCost = [0, 75, 150, 225, 300];
 
-class EnhancementCalculatorComponent extends Component {
-	constructor() {
-		super();
+interface Props {}
+export class EnhancementCalculator extends Component<Props, any> {
+	constructor(props) {
+		super(props);
 
 		this.state = {
 			stickerType: "", // +1 / summon +1 / attack hex / else
@@ -281,13 +282,13 @@ class EnhancementCalculatorComponent extends Component {
 	render() {
 		let cost = this.calculateCost();
 
-		let enhancementTypeColumns = [];
-		let playerPlusOneAbilityColumns = [];
-		let baseOtherEffectColumns = [];
-		let summonPlusOneAbilityColumns = [];
-		let abilityCardLevelColumns = [];
-		let previousEnhancementsColumns = [];
-		let numberOfHexesColumns = [];
+		let enhancementTypeColumns: ReactElement[] = [];
+		let playerPlusOneAbilityColumns: ReactElement[] = [];
+		let baseOtherEffectColumns: ReactElement[] = [];
+		let summonPlusOneAbilityColumns: ReactElement[] = [];
+		let abilityCardLevelColumns: ReactElement[] = [];
+		let previousEnhancementsColumns: ReactElement[] = [];
+		let numberOfHexesColumns: ReactElement[] = [];
 
 		for (let i = 2; i <= 13; i++) {
 			numberOfHexesColumns.push(
@@ -297,7 +298,9 @@ class EnhancementCalculatorComponent extends Component {
 						block
 						onClick={() => this.numberOfHexesClick(i)}
 						className={
-							this.state.numberOfCurrentlyTargetedHexes === i && "active"
+							this.state.numberOfCurrentlyTargetedHexes === i
+								? "active"
+								: undefined
 						}
 					>
 						{i}{" "}
@@ -316,7 +319,9 @@ class EnhancementCalculatorComponent extends Component {
 						block
 						onClick={() => this.previousEnhancementClick(i)}
 						className={
-							this.state.numberOfPreviousEnhancements === i && "active"
+							this.state.numberOfPreviousEnhancements === i
+								? "active"
+								: undefined
 						}
 					>
 						{i} (+{previousEnhancementCost[i]}g)
@@ -339,7 +344,9 @@ class EnhancementCalculatorComponent extends Component {
 						variant="outline-secondary"
 						block
 						onClick={() => this.levelClick(i)}
-						className={this.state.levelOfAbilityCard === i && "active"}
+						className={
+							this.state.levelOfAbilityCard === i ? "active" : undefined
+						}
 					>
 						{i} (+{levelCost[i - 1]}g)
 					</Button>
@@ -351,7 +358,7 @@ class EnhancementCalculatorComponent extends Component {
 			if (stickerTypes.hasOwnProperty(stickerType)) {
 				let type = stickerTypes[stickerType];
 
-				let icons = "";
+				let icons: ReactNode = "";
 				if (stickerType === "attackHex") {
 					icons = (
 						<GloomhavenIcon icon="generalAttackHex" width={iconWidth} />
@@ -380,7 +387,9 @@ class EnhancementCalculatorComponent extends Component {
 							block
 							onClick={() => this.stickerTypeClick(stickerType)}
 							className={
-								this.state.stickerType === stickerType && "active"
+								this.state.stickerType === stickerType
+									? "active"
+									: undefined
 							}
 						>
 							{type.title} {icons}
@@ -434,8 +443,9 @@ class EnhancementCalculatorComponent extends Component {
 							block
 							onClick={() => this.baseOtherEffectClick(baseOtherEffect)}
 							className={
-								this.state.baseOtherEffect === baseOtherEffect &&
-								"active"
+								this.state.baseOtherEffect === baseOtherEffect
+									? "active"
+									: undefined
 							}
 						>
 							{effect.title} {icons} ({effect.cost}g)
@@ -466,7 +476,9 @@ class EnhancementCalculatorComponent extends Component {
 							}
 							className={
 								this.state.playerPlusOneAbility ===
-									playerPlusOneAbilityLine && "active"
+								playerPlusOneAbilityLine
+									? "active"
+									: undefined
 							}
 						>
 							{ability.title}{" "}
@@ -499,7 +511,9 @@ class EnhancementCalculatorComponent extends Component {
 							}
 							className={
 								this.state.summonPlusOneAbility ===
-									summonPlusOneAbilityLine && "active"
+								summonPlusOneAbilityLine
+									? "active"
+									: undefined
 							}
 						>
 							{ability.title}{" "}
@@ -734,5 +748,3 @@ class EnhancementCalculatorComponent extends Component {
 		);
 	}
 }
-
-export default EnhancementCalculatorComponent;
