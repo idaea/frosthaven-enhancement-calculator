@@ -1,60 +1,85 @@
 import { Component, ReactElement, ReactNode } from "react";
 import { Container, Row, Col, Button, Badge } from "react-bootstrap";
 import GloomhavenIcon from "./gloomhavenIcon";
+import { capitalCase, pascalCase } from "change-case";
+import { mapValues } from "lodash";
 
 const iconWidth = "16px";
 
-const playerPlusOneAbilityLines = {
-	move: { cost: 30, title: "Move", icon: "generalMove" },
-	attack: { cost: 50, title: "Attack", icon: "generalAttack" },
-	range: { cost: 30, title: "Range", icon: "generalRange" },
-	target: { cost: 75, title: "Target", icon: "generalTarget" },
-	shield: { cost: 80, title: "Shield", icon: "generalShield" },
-	retaliate: { cost: 60, title: "Retaliate", icon: "generalRetaliate" },
-	pierce: { cost: 30, title: "Pierce", icon: "statusEffectPierce" },
-	heal: { cost: 30, title: "Heal", icon: "generalHeal" },
-	push: { cost: 30, title: "Push", icon: "statusEffectPush" },
-	pull: { cost: 30, title: "Pull", icon: "statusEffectPull" },
-	teleport: { cost: 30, title: "Teleport", icon: "generalTeleport" },
-};
+interface Effect {
+	cost: number;
+	title: string;
+	icon: string;
+}
 
-const summonPlusOneAbilityLines = {
+function buildEffects<TKey extends string>(
+	rawDefinitions: Record<
+		TKey,
+		{
+			cost: number;
+			title?: string;
+			icon?: string;
+		}
+	>
+): Record<TKey, Effect> {
+	return mapValues(rawDefinitions, ({ cost, title, icon }, key) => ({
+		cost,
+		title: title ?? capitalCase(key),
+		icon: icon ?? `general${pascalCase(key)}`,
+	}));
+}
+
+const playerPlusOneAbilityLines = buildEffects({
+	move: { cost: 30 },
+	attack: { cost: 50 },
+	range: { cost: 30 },
+	target: { cost: 75 },
+	shield: { cost: 80 },
+	retaliate: { cost: 60 },
+	pierce: { cost: 30, icon: "statusEffectPierce" },
+	heal: { cost: 30 },
+	push: { cost: 30, icon: "statusEffectPush" },
+	pull: { cost: 30, icon: "statusEffectPull" },
+	teleport: { cost: 30 },
+});
+
+const summonPlusOneAbilityLines = buildEffects({
 	hp: { cost: 40, title: "HP", icon: "generalHeal" },
-	move: { cost: 60, title: "Move", icon: "generalMove" },
-	attack: { cost: 100, title: "Attack", icon: "generalAttack" },
-	range: { cost: 50, title: "Range", icon: "generalRange" },
-};
+	move: { cost: 60 },
+	attack: { cost: 100 },
+	range: { cost: 50 },
+});
 
-const baseOtherEffects = {
+const baseOtherEffects = buildEffects({
 	regenerate: {
 		cost: 40,
-		title: "Regenerate",
 		icon: "statusEffectRegenerate",
 	},
-	ward: { cost: 40, title: "Ward", icon: "statusEffectWard" },
+	ward: { cost: 40, icon: "statusEffectWard" },
 	strengthen: {
 		cost: 100,
-		title: "Strengthen",
 		icon: "statusEffectStrengthen",
 	},
-	bless: { cost: 75, title: "Bless", icon: "statusEffectBless" },
-	wound: { cost: 75, title: "Wound", icon: "statusEffectWound" },
-	poison: { cost: 50, title: "Poison", icon: "statusEffectPoison" },
+	bless: { cost: 75, icon: "statusEffectBless" },
+	wound: { cost: 75, icon: "statusEffectWound" },
+	poison: { cost: 50, icon: "statusEffectPoison" },
 	immobilize: {
 		cost: 150,
-		title: "Immobilize",
 		icon: "statusEffectImmobilize",
 	},
-	muddle: { cost: 40, title: "Muddle", icon: "statusEffectMuddle" },
-	curse: { cost: 150, title: "Curse", icon: "statusEffectCurse" },
+	muddle: { cost: 40, icon: "statusEffectMuddle" },
+	curse: { cost: 150, icon: "statusEffectCurse" },
 	specificElement: {
 		cost: 100,
-		title: "Specific Element",
 		icon: "elementFire",
 	},
-	anyElement: { cost: 150, title: "Any Element", icon: "elementAll" },
-	jump: { cost: 60, title: "Jump", icon: "generalJump" },
-};
+	anyElement: { cost: 150, icon: "elementAll" },
+	jump: { cost: 60, icon: "generalJump" },
+});
+
+const baseNewAttackHexCost = 200;
+const levelCost = new Array(9).fill(0).map((_, i) => i * 25);
+const previousEnhancementCost = new Array(5).fill(0).map((_, i) => i * 75);
 
 const stickerTypes = {
 	playerPlus1: { title: "Player" },
@@ -62,9 +87,6 @@ const stickerTypes = {
 	attackHex: { title: "Attack Hex" },
 	otherEffect: { title: "Other Effect" },
 };
-
-const levelCost = [0, 25, 50, 75, 100, 125, 150, 175, 200];
-const previousEnhancementCost = [0, 75, 150, 225, 300];
 
 interface Props {}
 export class EnhancementCalculator extends Component<Props, any> {
@@ -125,7 +147,9 @@ export class EnhancementCalculator extends Component<Props, any> {
 				return 0;
 			}
 		} else if (this.state.stickerType === "attackHex") {
-			cost += Math.floor(200 / this.state.numberOfCurrentlyTargetedHexes);
+			cost += Math.floor(
+				baseNewAttackHexCost / this.state.numberOfCurrentlyTargetedHexes
+			);
 		} else if (this.state.stickerType === "otherEffect") {
 			if (this.state.baseOtherEffect) {
 				cost += baseOtherEffects[this.state.baseOtherEffect].cost;
