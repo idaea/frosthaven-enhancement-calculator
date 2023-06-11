@@ -1,5 +1,5 @@
-const mix = require('laravel-mix');
-const path = require('path');
+const mix = require("laravel-mix");
+const path = require("path");
 
 /*
  |--------------------------------------------------------------------------
@@ -12,17 +12,17 @@ const path = require('path');
  |
  */
 
-mix.setPublicPath('./public');
-mix.setResourceRoot('./');
+mix.setPublicPath("./public");
+mix.setResourceRoot("./");
 
-mix.js('src/js/calculatorLoader.js', 'public/js/calculator.js').react();
+mix.js("src/js/calculatorLoader.js", "public/js/calculator.js").react();
 
-mix.sass('src/scss/calculator.scss', 'public/css');
+mix.sass("src/scss/calculator.scss", "public/css");
 
 mix.version();
 
 mix.options({
-    terser: {
-        extractComments: false,
-    }
+	terser: {
+		extractComments: false,
+	},
 });
