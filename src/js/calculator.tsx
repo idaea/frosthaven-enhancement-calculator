@@ -8,6 +8,7 @@ const iconWidth = "16px";
 
 interface Effect {
 	cost: number;
+	costLow: number;
 	title: string;
 	icon: string;
 }
@@ -17,69 +18,90 @@ function buildEffects<TKey extends string>(
 		TKey,
 		{
 			cost: number;
+			costLow: number;
 			title?: string;
 			icon?: string;
 		}
 	>
 ): Record<TKey, Effect> {
-	return mapValues(rawDefinitions, ({ cost, title, icon }, key) => ({
+	return mapValues(rawDefinitions, ({ cost, costLow, title, icon }, key) => ({
 		cost,
+		costLow,
 		title: title ?? capitalCase(key),
 		icon: icon ?? `general${pascalCase(key)}`,
 	}));
 }
 
+// "low" values from https://i.imgur.com/nEsIUvG.png
+
 const playerPlusOneAbilityLines = buildEffects({
-	move: { cost: 30 },
-	attack: { cost: 50 },
-	range: { cost: 30 },
-	target: { cost: 75 },
-	shield: { cost: 80 },
-	retaliate: { cost: 60 },
-	pierce: { cost: 30, icon: "statusEffectPierce" },
-	heal: { cost: 30 },
-	push: { cost: 30, icon: "statusEffectPush" },
-	pull: { cost: 30, icon: "statusEffectPull" },
-	teleport: { cost: 30 },
+	move: { cost: 30, costLow: 20 },
+	attack: { cost: 50, costLow: 35 },
+	range: { cost: 30, costLow: 20 },
+	target: { cost: 75, costLow: 40 },
+	shield: { cost: 80, costLow: 60 },
+	retaliate: { cost: 60, costLow: 40 },
+	pierce: { cost: 30, costLow: 15, icon: "statusEffectPierce" },
+	heal: { cost: 30, costLow: 20 },
+	push: { cost: 30, costLow: 20, icon: "statusEffectPush" },
+	pull: { cost: 30, costLow: 15, icon: "statusEffectPull" },
+	teleport: { cost: 30, costLow: 30 },
 });
 
 const summonPlusOneAbilityLines = buildEffects({
-	hp: { cost: 40, title: "HP", icon: "generalHeal" },
-	move: { cost: 60 },
-	attack: { cost: 100 },
-	range: { cost: 50 },
+	hp: { cost: 40, costLow: 30, title: "HP", icon: "generalHeal" },
+	move: { cost: 60, costLow: 40 },
+	attack: { cost: 100, costLow: 60 },
+	range: { cost: 50, costLow: 40 },
 });
 
 const baseOtherEffects = buildEffects({
 	regenerate: {
 		cost: 40,
+		costLow: 40,
 		icon: "statusEffectRegenerate",
 	},
-	ward: { cost: 40, icon: "statusEffectWard" },
+	ward: { cost: 40, costLow: 40, icon: "statusEffectWard" },
 	strengthen: {
 		cost: 100,
+		costLow: 100,
 		icon: "statusEffectStrengthen",
 	},
-	bless: { cost: 75, icon: "statusEffectBless" },
-	wound: { cost: 75, icon: "statusEffectWound" },
-	poison: { cost: 50, icon: "statusEffectPoison" },
+	bless: { cost: 75, costLow: 50, icon: "statusEffectBless" },
+	wound: { cost: 75, costLow: 45, icon: "statusEffectWound" },
+	poison: { cost: 50, costLow: 30, icon: "statusEffectPoison" },
 	immobilize: {
 		cost: 150,
+		costLow: 100,
 		icon: "statusEffectImmobilize",
 	},
-	muddle: { cost: 40, icon: "statusEffectMuddle" },
-	curse: { cost: 150, icon: "statusEffectCurse" },
+	muddle: { cost: 40, costLow: 25, icon: "statusEffectMuddle" },
+	curse: { cost: 150, costLow: 100, icon: "statusEffectCurse" },
 	specificElement: {
 		cost: 100,
+		costLow: 60,
 		icon: "elementFire",
 	},
-	anyElement: { cost: 150, icon: "elementAll" },
-	jump: { cost: 60, icon: "generalJump" },
+	anyElement: { cost: 150, costLow: 90, icon: "elementAll" },
+	jump: { cost: 60, costLow: 35, icon: "generalJump" },
 });
 
-const baseNewAttackHexCost = 200;
-const levelCost = new Array(9).fill(0).map((_, i) => i * 25);
-const previousEnhancementCost = new Array(5).fill(0).map((_, i) => i * 75);
+function generateNumericSequence(
+	length: number,
+	getVal: (i: number) => number
+): number[] {
+	return new Array(length).fill(0).map((_, i) => getVal(i));
+}
+
+const baseNewAttackHexCost = { default: 200, low: 150 };
+const levelCost = {
+	default: generateNumericSequence(9, (i) => i * 25),
+	low: generateNumericSequence(9, (i) => i * 10),
+};
+const previousEnhancementCost = {
+	default: generateNumericSequence(5, (i) => i * 75),
+	low: generateNumericSequence(5, (i) => i * 20),
+};
 
 const stickerTypes = {
 	playerPlus1: { title: "Player" },
@@ -148,7 +170,8 @@ export class EnhancementCalculator extends Component<Props, any> {
 			}
 		} else if (this.state.stickerType === "attackHex") {
 			cost += Math.floor(
-				baseNewAttackHexCost / this.state.numberOfCurrentlyTargetedHexes
+				baseNewAttackHexCost.default /
+					this.state.numberOfCurrentlyTargetedHexes
 			);
 		} else if (this.state.stickerType === "otherEffect") {
 			if (this.state.baseOtherEffect) {
@@ -181,10 +204,13 @@ export class EnhancementCalculator extends Component<Props, any> {
 		}
 
 		// extra cost for level of ability card
-		cost += levelCost[this.state.levelOfAbilityCard - 1];
+		cost += levelCost.default[this.state.levelOfAbilityCard - 1];
 
 		// extra cost for previous enhancements to the same action
-		cost += previousEnhancementCost[this.state.numberOfPreviousEnhancements];
+		cost +=
+			previousEnhancementCost.default[
+				this.state.numberOfPreviousEnhancements
+			];
 
 		return cost;
 	}
@@ -348,7 +374,7 @@ export class EnhancementCalculator extends Component<Props, any> {
 								: undefined
 						}
 					>
-						{i} (+{previousEnhancementCost[i]}g)
+						{i} (+{previousEnhancementCost.default[i]}g)
 					</Button>
 				</Col>
 			);
@@ -372,7 +398,7 @@ export class EnhancementCalculator extends Component<Props, any> {
 							this.state.levelOfAbilityCard === i ? "active" : undefined
 						}
 					>
-						{i} (+{levelCost[i - 1]}g)
+						{i} (+{levelCost.default[i - 1]}g)
 					</Button>
 				</Col>
 			);
