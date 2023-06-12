@@ -33,6 +33,7 @@ function buildEffects<TKey extends string>(
 }
 
 // "low" values from https://i.imgur.com/nEsIUvG.png
+// recommended by FH dev here: https://www.reddit.com/r/Gloomhaven/comments/uo3som/comment/i8cej68/
 
 const playerPlusOneAbilityLines = buildEffects({
 	move: { cost: 30, costLow: 20 },
