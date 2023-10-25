@@ -576,25 +576,43 @@ export function EnhancementCalculator() {
 							+1" enhancements (
 							{getEffectCost(playerPlusOneAbilityLines.move)} gold).
 						</p>
-						<Form inline>
-							<Form.Group controlId="pricingMethod">
-								<Form.Label className="mr-2">Pricing method</Form.Label>
-								<Form.Control
-									as="select"
-									value={pricingMethod}
-									onChange={(x) => {
-										setPricingMethod(x.target.value as PricingMethod);
-									}}
-								>
-									<option value="frosthaven">Frosthaven</option>
-									<option value="frosthaven_non_permanent">
-										Frosthaven (non-permanent stickers){" "}
-									</option>
-									{/* <option value="gloomhaven_digital">
+						<Form>
+							<Form.Group as={Form.Row}>
+								<Form.Label column sm="2">
+									Pricing method
+								</Form.Label>
+								<Col sm="10">
+									<Form.Control
+										as="select"
+										value={pricingMethod}
+										onChange={(x) => {
+											setPricingMethod(
+												x.target.value as PricingMethod
+											);
+										}}
+									>
+										<option value="frosthaven">Frosthaven</option>
+										<option value="frosthaven_non_permanent">
+											Frosthaven (non-permanent stickers){" "}
+										</option>
+										{/* <option value="gloomhaven_digital">
 										Gloomhaven Digital (non-permanent stickers)
 									</option> */}
-								</Form.Control>
+									</Form.Control>
+								</Col>
 							</Form.Group>
+
+							<Form.Row as={Form.Row}>
+								<Form.Label column sm="2">
+									Enhancer level
+								</Form.Label>
+								<Col sm="10">
+									<Form.Control as="select" disabled>
+										<option>1</option>
+										<option>2</option>
+									</Form.Control>
+								</Col>
+							</Form.Row>
 						</Form>
 					</Col>
 				</Row>
