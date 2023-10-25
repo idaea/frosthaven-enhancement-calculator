@@ -3,6 +3,7 @@ import { Container, Row, Col, Button, Badge, Form } from "react-bootstrap";
 import GloomhavenIcon from "./gloomhavenIcon";
 import { capitalCase, pascalCase } from "change-case";
 import { mapValues } from "lodash";
+import { PricingStrategies, PricingStrategyType } from "./PricingStrategies";
 
 const iconWidth = "16px";
 
@@ -88,32 +89,6 @@ const baseOtherEffects = buildEffects({
 	jump: { cost: 60, costGD: 35, icon: "generalJump" },
 });
 
-function generateNumericSequence(
-	length: number,
-	getVal: (i: number) => number
-): number[] {
-	return new Array(length).fill(0).map((_, i) => getVal(i));
-}
-
-const baseNewAttackHexCost = { default: 200, low: 150 };
-const levelCost: Record<PricingMethod, number[]> = {
-	frosthaven: generateNumericSequence(9, (i) => i * 25),
-	frosthaven_non_permanent: generateNumericSequence(9, (i) => i * 25),
-	gloomhaven_digital: generateNumericSequence(9, (i) => i * 10),
-};
-
-const previousEnhancementCost: Record<PricingMethod, number[]> = {
-	frosthaven: generateNumericSequence(5, (i) => i * 75),
-	frosthaven_non_permanent: generateNumericSequence(5, (i) => {
-		if (i === 0) {
-			return 0;
-		} else {
-			return 55 + (i - 1) * 75;
-		}
-	}),
-	gloomhaven_digital: generateNumericSequence(5, (i) => i * 20),
-};
-
 const stickerTypes = {
 	playerPlus1: { title: "Player" },
 	summonPlus1: { title: "Summon" },
@@ -140,10 +115,13 @@ export function EnhancementCalculator() {
 	const [multipleTargets, setMultipleTargets] = useState(false);
 	const [lostCard, setLostCard] = useState(false);
 	const [persistentBonus, setPersistentBonus] = useState(false);
-	const [pricingMethod, setPricingMethod] =
-		useState<PricingMethod>("frosthaven");
+	const [pricingStrategyType, setPricingStrategyType] =
+		useState<PricingStrategyType>("frosthaven");
+	const [enhancerLevel, setEnhancerLevel] = useState<number>(1);
 
-	const useGDCosts = pricingMethod === "gloomhaven_digital";
+	const pricingStrategy = PricingStrategies[pricingStrategyType];
+
+	const useGDCosts = false; // pricingStrategyType === "gloomhaven_digital";
 
 	function doubleMultipleTargets() {
 		if (selectedStickerType === "attackHex") {
@@ -173,7 +151,7 @@ export function EnhancementCalculator() {
 		costVariants: Record<PricingMethod, number[]>,
 		i: number
 	): number {
-		return costVariants[pricingMethod][i];
+		return costVariants[pricingStrategyType][i];
 	}
 
 	function calculateCost() {
@@ -199,9 +177,8 @@ export function EnhancementCalculator() {
 			}
 		} else if (selectedStickerType === "attackHex") {
 			cost += Math.ceil(
-				(useGDCosts
-					? baseNewAttackHexCost.low
-					: baseNewAttackHexCost.default) / numberOfCurrentlyTargetedHexes
+				pricingStrategy.baseNewAttackHexCost /
+					numberOfCurrentlyTargetedHexes
 			);
 		} else if (selectedStickerType === "otherEffect") {
 			if (baseOtherEffect) {
@@ -231,16 +208,23 @@ export function EnhancementCalculator() {
 		}
 
 		// extra cost for level of ability card
-		cost += getScaledCost(levelCost, levelOfAbilityCard - 1);
-
-		// extra cost for previous enhancements to the same action
-		cost += getScaledCost(
-			previousEnhancementCost,
-			numberOfPreviousEnhancements
+		cost += pricingStrategy.getCostFromCardLevel(
+			levelOfAbilityCard,
+			enhancerLevel
 		);
 
-		if (pricingMethod === "frosthaven_non_permanent") {
+		// extra cost for previous enhancements to the same action
+		cost += pricingStrategy.getCostFromPriorEnhancements(
+			numberOfPreviousEnhancements,
+			enhancerLevel
+		);
+
+		if (pricingStrategyType === "frosthaven_non_permanent") {
 			cost = Math.ceil(cost * 0.8);
+		}
+
+		if (enhancerLevel >= 2) {
+			cost -= 10;
 		}
 
 		return cost;
@@ -347,7 +331,9 @@ export function EnhancementCalculator() {
 						numberOfPreviousEnhancements === i ? "active" : undefined
 					}
 				>
-					{i} (+{getScaledCost(previousEnhancementCost, i)}g)
+					{i} (+
+					{pricingStrategy.getCostFromPriorEnhancements(i, enhancerLevel)}
+					g)
 				</Button>
 			</Col>
 		);
@@ -369,7 +355,9 @@ export function EnhancementCalculator() {
 					onClick={() => setLevelOfAbilityCard(i)}
 					className={levelOfAbilityCard === i ? "active" : undefined}
 				>
-					{i} (+{getScaledCost(levelCost, i - 1)}g)
+					{i} (+
+					{pricingStrategy.getCostFromCardLevel(i, enhancerLevel)}
+					g)
 				</Button>
 			</Col>
 		);
@@ -584,10 +572,10 @@ export function EnhancementCalculator() {
 								<Col sm="10">
 									<Form.Control
 										as="select"
-										value={pricingMethod}
+										value={pricingStrategyType}
 										onChange={(x) => {
-											setPricingMethod(
-												x.target.value as PricingMethod
+											setPricingStrategyType(
+												x.target.value as PricingStrategyType
 											);
 										}}
 									>
@@ -607,9 +595,17 @@ export function EnhancementCalculator() {
 									Enhancer level
 								</Form.Label>
 								<Col sm="10">
-									<Form.Control as="select" disabled>
+									<Form.Control
+										as="select"
+										value={enhancerLevel}
+										onChange={(x) => {
+											setEnhancerLevel(parseInt(x.target.value));
+										}}
+									>
 										<option>1</option>
 										<option>2</option>
+										<option>3</option>
+										<option>4</option>
 									</Form.Control>
 								</Col>
 							</Form.Row>
