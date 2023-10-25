@@ -8,7 +8,8 @@ const iconWidth = "16px";
 
 interface Effect {
 	cost: number;
-	costLow: number;
+	/** The cost in Gloomhaven Digital */
+	costGD: number;
 	title: string;
 	icon: string;
 }
@@ -18,15 +19,15 @@ function buildEffects<TKey extends string>(
 		TKey,
 		{
 			cost: number;
-			costLow: number;
+			costGD: number;
 			title?: string;
 			icon?: string;
 		}
 	>
 ): Record<TKey, Effect> {
-	return mapValues(rawDefinitions, ({ cost, costLow, title, icon }, key) => ({
+	return mapValues(rawDefinitions, ({ cost, costGD, title, icon }, key) => ({
 		cost,
-		costLow,
+		costGD,
 		title: title ?? capitalCase(key),
 		icon: icon ?? `general${pascalCase(key)}`,
 	}));
@@ -36,55 +37,55 @@ function buildEffects<TKey extends string>(
 // recommended by FH dev here: https://www.reddit.com/r/Gloomhaven/comments/uo3som/comment/i8cej68/
 
 const playerPlusOneAbilityLines = buildEffects({
-	move: { cost: 30, costLow: 20 },
-	attack: { cost: 50, costLow: 35 },
-	range: { cost: 30, costLow: 20 },
-	target: { cost: 75, costLow: 40 },
-	shield: { cost: 80, costLow: 60 },
-	retaliate: { cost: 60, costLow: 40 },
-	pierce: { cost: 30, costLow: 15, icon: "statusEffectPierce" },
-	heal: { cost: 30, costLow: 20 },
-	push: { cost: 30, costLow: 20, icon: "statusEffectPush" },
-	pull: { cost: 30, costLow: 15, icon: "statusEffectPull" },
-	teleport: { cost: 30, costLow: 30 },
+	move: { cost: 30, costGD: 20 },
+	attack: { cost: 50, costGD: 35 },
+	range: { cost: 30, costGD: 20 },
+	target: { cost: 75, costGD: 40 },
+	shield: { cost: 80, costGD: 60 },
+	retaliate: { cost: 60, costGD: 40 },
+	pierce: { cost: 30, costGD: 15, icon: "statusEffectPierce" },
+	heal: { cost: 30, costGD: 20 },
+	push: { cost: 30, costGD: 20, icon: "statusEffectPush" },
+	pull: { cost: 30, costGD: 15, icon: "statusEffectPull" },
+	teleport: { cost: 30, costGD: 30 },
 });
 
 const summonPlusOneAbilityLines = buildEffects({
-	hp: { cost: 40, costLow: 30, title: "HP", icon: "generalHeal" },
-	move: { cost: 60, costLow: 40 },
-	attack: { cost: 100, costLow: 60 },
-	range: { cost: 50, costLow: 40 },
+	hp: { cost: 40, costGD: 30, title: "HP", icon: "generalHeal" },
+	move: { cost: 60, costGD: 40 },
+	attack: { cost: 100, costGD: 60 },
+	range: { cost: 50, costGD: 40 },
 });
 
 const baseOtherEffects = buildEffects({
 	regenerate: {
 		cost: 40,
-		costLow: 40,
+		costGD: 40,
 		icon: "statusEffectRegenerate",
 	},
-	ward: { cost: 40, costLow: 40, icon: "statusEffectWard" },
+	ward: { cost: 40, costGD: 40, icon: "statusEffectWard" },
 	strengthen: {
 		cost: 100,
-		costLow: 100,
+		costGD: 100,
 		icon: "statusEffectStrengthen",
 	},
-	bless: { cost: 75, costLow: 50, icon: "statusEffectBless" },
-	wound: { cost: 75, costLow: 45, icon: "statusEffectWound" },
-	poison: { cost: 50, costLow: 30, icon: "statusEffectPoison" },
+	bless: { cost: 75, costGD: 50, icon: "statusEffectBless" },
+	wound: { cost: 75, costGD: 45, icon: "statusEffectWound" },
+	poison: { cost: 50, costGD: 30, icon: "statusEffectPoison" },
 	immobilize: {
 		cost: 150,
-		costLow: 100,
+		costGD: 100,
 		icon: "statusEffectImmobilize",
 	},
-	muddle: { cost: 40, costLow: 25, icon: "statusEffectMuddle" },
-	curse: { cost: 150, costLow: 100, icon: "statusEffectCurse" },
+	muddle: { cost: 40, costGD: 25, icon: "statusEffectMuddle" },
+	curse: { cost: 150, costGD: 100, icon: "statusEffectCurse" },
 	specificElement: {
 		cost: 100,
-		costLow: 60,
+		costGD: 60,
 		icon: "elementFire",
 	},
-	anyElement: { cost: 150, costLow: 90, icon: "elementAll" },
-	jump: { cost: 60, costLow: 35, icon: "generalJump" },
+	anyElement: { cost: 150, costGD: 90, icon: "elementAll" },
+	jump: { cost: 60, costGD: 35, icon: "generalJump" },
 });
 
 function generateNumericSequence(
@@ -95,13 +96,22 @@ function generateNumericSequence(
 }
 
 const baseNewAttackHexCost = { default: 200, low: 150 };
-const levelCost = {
-	default: generateNumericSequence(9, (i) => i * 25),
-	low: generateNumericSequence(9, (i) => i * 10),
+const levelCost: Record<PricingMethod, number[]> = {
+	frosthaven: generateNumericSequence(9, (i) => i * 25),
+	frosthaven_non_permanent: generateNumericSequence(9, (i) => i * 25),
+	gloomhaven_digital: generateNumericSequence(9, (i) => i * 10),
 };
-const previousEnhancementCost = {
-	default: generateNumericSequence(5, (i) => i * 75),
-	low: generateNumericSequence(5, (i) => i * 20),
+
+const previousEnhancementCost: Record<PricingMethod, number[]> = {
+	frosthaven: generateNumericSequence(5, (i) => i * 75),
+	frosthaven_non_permanent: generateNumericSequence(5, (i) => {
+		if (i === 0) {
+			return 0;
+		} else {
+			return 55 + (i - 1) * 75;
+		}
+	}),
+	gloomhaven_digital: generateNumericSequence(5, (i) => i * 20),
 };
 
 const stickerTypes = {
@@ -110,6 +120,11 @@ const stickerTypes = {
 	attackHex: { title: "Attack Hex" },
 	otherEffect: { title: "Other Effect" },
 };
+
+type PricingMethod =
+	| "frosthaven"
+	| "frosthaven_non_permanent"
+	| "gloomhaven_digital";
 
 export function EnhancementCalculator() {
 	const [selectedStickerType, setSelectedStickerType] = useState(""); // +1 / summon +1 / attack hex / else
@@ -125,7 +140,10 @@ export function EnhancementCalculator() {
 	const [multipleTargets, setMultipleTargets] = useState(false);
 	const [lostCard, setLostCard] = useState(false);
 	const [persistentBonus, setPersistentBonus] = useState(false);
-	const [useLowCosts, setUseLowCosts] = useState(false);
+	const [pricingMethod, setPricingMethod] =
+		useState<PricingMethod>("frosthaven");
+
+	const useGDCosts = pricingMethod === "gloomhaven_digital";
 
 	function doubleMultipleTargets() {
 		if (selectedStickerType === "attackHex") {
@@ -148,14 +166,14 @@ export function EnhancementCalculator() {
 	}
 
 	function getEffectCost(effect: Effect): number {
-		return useLowCosts ? effect.costLow : effect.cost;
+		return useGDCosts ? effect.costGD : effect.cost;
 	}
 
 	function getScaledCost(
-		costVariants: { default: number[]; low: number[] },
+		costVariants: Record<PricingMethod, number[]>,
 		i: number
 	): number {
-		return (useLowCosts ? costVariants.low : costVariants.default)[i];
+		return costVariants[pricingMethod][i];
 	}
 
 	function calculateCost() {
@@ -181,7 +199,7 @@ export function EnhancementCalculator() {
 			}
 		} else if (selectedStickerType === "attackHex") {
 			cost += Math.floor(
-				(useLowCosts
+				(useGDCosts
 					? baseNewAttackHexCost.low
 					: baseNewAttackHexCost.default) / numberOfCurrentlyTargetedHexes
 			);
@@ -220,6 +238,10 @@ export function EnhancementCalculator() {
 			previousEnhancementCost,
 			numberOfPreviousEnhancements
 		);
+
+		if (pricingMethod === "frosthaven_non_permanent") {
+			cost = Math.ceil(cost * 0.8);
+		}
 
 		return cost;
 	}
@@ -554,16 +576,25 @@ export function EnhancementCalculator() {
 							+1" enhancements (
 							{getEffectCost(playerPlusOneAbilityLines.move)} gold).
 						</p>
-						<Form>
-							<Form.Check
-								label="Use lower costs"
-								type="checkbox"
-								id="useLowerCosts"
-								checked={useLowCosts}
-								onChange={(x) => {
-									setUseLowCosts(x.target.checked);
-								}}
-							/>
+						<Form inline>
+							<Form.Group controlId="pricingMethod">
+								<Form.Label className="mr-2">Pricing method</Form.Label>
+								<Form.Control
+									as="select"
+									value={pricingMethod}
+									onChange={(x) => {
+										setPricingMethod(x.target.value as PricingMethod);
+									}}
+								>
+									<option value="frosthaven">Frosthaven</option>
+									<option value="frosthaven_non_permanent">
+										Frosthaven (non-permanent stickers){" "}
+									</option>
+									<option value="gloomhaven_digital">
+										Gloomhaven Digital (non-permanent stickers)
+									</option>
+								</Form.Control>
+							</Form.Group>
 						</Form>
 					</Col>
 				</Row>
