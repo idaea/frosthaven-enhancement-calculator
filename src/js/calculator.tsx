@@ -685,8 +685,8 @@ export function EnhancementCalculator() {
 								className="text-center instruction-label"
 							>
 								Ability has a Lost{" "}
-								<GloomhavenIcon icon="generalLost" width={iconWidth} />,
-								but no Persistent{" "}
+								<GloomhavenIcon icon="generalLost" width={iconWidth} />{" "}
+								Icon, but no Persistent{" "}
 								<GloomhavenIcon
 									icon="generalPersistent"
 									width={iconWidth}
