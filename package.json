@@ -28,24 +28,5 @@
     "sass": "^1.63.3",
     "sass-loader": "^13.3.2",
     "typescript": "^4.9.5"
-  },
-  "babel": {
-    "presets": [
-      [
-        "@babel/preset-react"
-      ]
-    ]
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
   }
 }
