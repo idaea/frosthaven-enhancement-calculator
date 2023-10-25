@@ -46,8 +46,8 @@ const playerPlusOneAbilityLines = buildEffects({
 	pierce: { cost: 30, costGD: 15, icon: "statusEffectPierce" },
 	heal: { cost: 30, costGD: 20 },
 	push: { cost: 30, costGD: 20, icon: "statusEffectPush" },
-	pull: { cost: 30, costGD: 15, icon: "statusEffectPull" },
-	teleport: { cost: 30, costGD: 30 },
+	pull: { cost: 20, costGD: 15, icon: "statusEffectPull" },
+	teleport: { cost: 50, costGD: 50 },
 });
 
 const summonPlusOneAbilityLines = buildEffects({
@@ -63,7 +63,7 @@ const baseOtherEffects = buildEffects({
 		costGD: 40,
 		icon: "statusEffectRegenerate",
 	},
-	ward: { cost: 40, costGD: 40, icon: "statusEffectWard" },
+	ward: { cost: 75, costGD: 40, icon: "statusEffectWard" },
 	strengthen: {
 		cost: 100,
 		costGD: 100,
@@ -590,9 +590,9 @@ export function EnhancementCalculator() {
 									<option value="frosthaven_non_permanent">
 										Frosthaven (non-permanent stickers){" "}
 									</option>
-									<option value="gloomhaven_digital">
+									{/* <option value="gloomhaven_digital">
 										Gloomhaven Digital (non-permanent stickers)
-									</option>
+									</option> */}
 								</Form.Control>
 							</Form.Group>
 						</Form>
