@@ -84,7 +84,7 @@ const baseOtherEffects = buildEffects({
 		costGD: 60,
 		icon: "elementFire",
 	},
-	anyElement: { cost: 150, costGD: 90, icon: "elementAll" },
+	wildElement: { cost: 150, costGD: 90, icon: "elementAll" },
 	jump: { cost: 60, costGD: 35, icon: "generalJump" },
 });
 
@@ -154,7 +154,7 @@ export function EnhancementCalculator() {
 			return false;
 		}
 
-		if (baseOtherEffect === "anyElement") {
+		if (baseOtherEffect === "wildElement") {
 			return false;
 		}
 
@@ -421,7 +421,7 @@ export function EnhancementCalculator() {
 			let md = 3;
 			if (
 				baseOtherEffectKey === "specificElement" ||
-				baseOtherEffectKey === "anyElement" ||
+				baseOtherEffectKey === "wildElement" ||
 				baseOtherEffectKey === "jump"
 			) {
 				xs = 12;
