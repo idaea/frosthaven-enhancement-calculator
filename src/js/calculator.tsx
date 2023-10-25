@@ -198,7 +198,7 @@ export function EnhancementCalculator() {
 				return 0;
 			}
 		} else if (selectedStickerType === "attackHex") {
-			cost += Math.floor(
+			cost += Math.ceil(
 				(useGDCosts
 					? baseNewAttackHexCost.low
 					: baseNewAttackHexCost.default) / numberOfCurrentlyTargetedHexes
@@ -330,7 +330,7 @@ export function EnhancementCalculator() {
 					}
 				>
 					{i} <GloomhavenIcon icon="generalAttackHex" width={iconWidth} />{" "}
-					({Math.floor(200 / i)}g)
+					({Math.ceil(200 / i)}g)
 				</Button>
 			</Col>
 		);
