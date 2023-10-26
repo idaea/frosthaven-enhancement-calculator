@@ -33,8 +33,6 @@ export function EnhancementCalculator() {
 
 	const pricingStrategy = PricingStrategies[pricingStrategyType];
 
-	const useGDCosts = false; // pricingStrategyType === "gloomhaven_digital";
-
 	function doubleMultipleTargets() {
 		if (selectedStickerType === "attackHex") {
 			return false;
@@ -421,47 +419,17 @@ export function EnhancementCalculator() {
 
 	return (
 		<div className="container">
-			<Container className="enhancement-container">
+			<Container fluid className="enhancement-container">
+				<h1 className="mt-2">
+					Frosthaven Enhancement Calculator{" "}
+					<sup>
+						<a href="https://github.com/idaea/frosthaven-enhancement-calculator">
+							source
+						</a>
+					</sup>
+				</h1>
 				<Row className="hidden-xs">
 					<Col xs={12} md={12}>
-						<p>
-							Adapted from:{" "}
-							<a href="https://ninjawithkillmoon.github.io/utilities/enhancementCalculator">
-								The Arcane Library - Enhancement Calculator
-							</a>
-							.{" "}
-							<a href="https://github.com/pikdonker/frosthaven-enhancement-calculator">
-								Source
-							</a>
-						</p>
-						<p>
-							Each type of enhancement has a base cost. The cost might
-							then be modified based on which ability is being enhanced.
-						</p>
-						<p>
-							Some enhancements do not fall neatly into the categories on
-							the cost chart. When determining their base cost, treat
-							damage traps as "
-							<GloomhavenIcon icon="generalAttack" width="12px" /> +1"
-							enhancements (
-							{pricingStrategy.effects.playerPlusOne.attack.cost} gold),
-							treat healing traps as "
-							<GloomhavenIcon
-								alt="Heal Icon"
-								icon="generalHeal"
-								width="12px"
-							/>{" "}
-							+1" enhancements (
-							{pricingStrategy.effects.playerPlusOne.heal.cost} gold),
-							and treat the movement of tokens and tiles as "
-							<GloomhavenIcon
-								alt="Move Icon"
-								icon="generalMove"
-								width="12px"
-							/>{" "}
-							+1" enhancements (
-							{pricingStrategy.effects.playerPlusOne.move.cost} gold).
-						</p>
 						<Form>
 							<Form.Group as={Form.Row}>
 								<Form.Label column sm="2">
@@ -508,6 +476,31 @@ export function EnhancementCalculator() {
 								</Col>
 							</Form.Row>
 						</Form>
+
+						<p className="mt-4">
+							Some enhancements do not fall neatly into the categories on
+							the cost chart. When determining their base cost, treat
+							damage traps as "
+							<GloomhavenIcon icon="generalAttack" width="12px" /> +1"
+							enhancements (
+							{pricingStrategy.effects.playerPlusOne.attack.cost} gold),
+							treat healing traps as "
+							<GloomhavenIcon
+								alt="Heal Icon"
+								icon="generalHeal"
+								width="12px"
+							/>{" "}
+							+1" enhancements (
+							{pricingStrategy.effects.playerPlusOne.heal.cost} gold),
+							and treat the movement of tokens and tiles as "
+							<GloomhavenIcon
+								alt="Move Icon"
+								icon="generalMove"
+								width="12px"
+							/>{" "}
+							+1" enhancements (
+							{pricingStrategy.effects.playerPlusOne.move.cost} gold).
+						</p>
 					</Col>
 				</Row>
 

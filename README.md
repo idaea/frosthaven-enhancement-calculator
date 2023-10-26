@@ -2,6 +2,8 @@
 
 Simple calculator to help calculate enhancement costs for Frosthaven.
 
+Forked from https://github.com/pikdonker/frosthaven-enhancement-calculator
+
 Based on the calculator by [John Tonkin](https://github.com/ninjawithkillmoon), found [here](https://github.com/ninjawithkillmoon/gloomhaven-thearcanelibrary).
 
 Uses icons from https://github.com/any2cards/worldhaven.
