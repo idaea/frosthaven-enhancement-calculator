@@ -69,15 +69,12 @@ const frosthaven: PricingStrategy = {
 const frosthaven_non_permanent: PricingStrategy = {
 	...frosthaven,
 	getCostFromPriorEnhancements(numberOfPriorEnhancements, enhancerLevel) {
-		if (numberOfPriorEnhancements === 0) {
-			return 0;
-		} else {
-			return (
-				55 +
-				(numberOfPriorEnhancements - 1) *
-					(75 - (enhancerLevel === 4 ? 25 : 0))
-			);
-		}
+		const vanillaCost = frosthaven.getCostFromPriorEnhancements(
+			numberOfPriorEnhancements,
+			enhancerLevel
+		);
+
+		return Math.max(0, vanillaCost - 20);
 	},
 };
 
