@@ -445,9 +445,11 @@ export function EnhancementCalculator() {
 											);
 										}}
 									>
-										<option value="frosthaven">Frosthaven</option>
+										<option value="frosthaven">
+											Permanent stickers
+										</option>
 										<option value="frosthaven_non_permanent">
-											Frosthaven (non-permanent stickers){" "}
+											Temporary stickers
 										</option>
 										{/* <option value="gloomhaven_digital">
 										Gloomhaven Digital (non-permanent stickers)
