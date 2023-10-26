@@ -1,3 +1,5 @@
+import { Effect, EffectTypes, buildEffects } from "./buildEffects";
+
 export type PricingStrategyType =
 	| "frosthaven"
 	| "frosthaven_non_permanent"
@@ -10,6 +12,11 @@ export type PricingStrategy = {
 		enhancerLevel: number
 	): number;
 	baseNewAttackHexCost: number;
+	effects: {
+		playerPlusOne: Record<EffectTypes.PlayerPlusOne, Effect>;
+		summonPlusOne: Record<EffectTypes.SummonPlusOne, Effect>;
+		other: Record<EffectTypes.Other, Effect>;
+	};
 };
 
 const frosthaven: PricingStrategy = {
@@ -20,6 +27,43 @@ const frosthaven: PricingStrategy = {
 		return numberOfPriorEnhancements * (75 - (enhancerLevel === 4 ? 25 : 0));
 	},
 	baseNewAttackHexCost: 200,
+	effects: {
+		playerPlusOne: buildEffects({
+			move: 30,
+			attack: 50,
+			range: 30,
+			target: 75,
+			shield: 80,
+			retaliate: 60,
+			pierce: 30,
+			heal: 30,
+			push: 30,
+			pull: 20,
+			teleport: 50,
+		}),
+
+		summonPlusOne: buildEffects({
+			hp: 40,
+			move: 60,
+			attack: 100,
+			range: 50,
+		}),
+
+		other: buildEffects({
+			regenerate: 40,
+			ward: 75,
+			strengthen: 100,
+			bless: 75,
+			wound: 75,
+			poison: 50,
+			immobilize: 150,
+			muddle: 40,
+			curse: 150,
+			specificElement: 100,
+			wildElement: 150,
+			jump: 60,
+		}),
+	},
 };
 
 const frosthaven_non_permanent: PricingStrategy = {
@@ -45,6 +89,45 @@ const gloomhaven_digital: PricingStrategy = {
 		return numberOfPriorEnhancements * 20;
 	},
 	baseNewAttackHexCost: 150,
+	effects: {
+		// values from https://i.imgur.com/nEsIUvG.png
+		// recommended by FH dev here: https://www.reddit.com/r/Gloomhaven/comments/uo3som/comment/i8cej68/
+		playerPlusOne: buildEffects({
+			move: 20,
+			attack: 35,
+			range: 20,
+			target: 40,
+			shield: 60,
+			retaliate: 40,
+			pierce: 15,
+			heal: 20,
+			push: 20,
+			pull: 15,
+			teleport: 50,
+		}),
+
+		summonPlusOne: buildEffects({
+			hp: 30,
+			move: 40,
+			attack: 60,
+			range: 40,
+		}),
+
+		other: buildEffects({
+			regenerate: 40,
+			ward: 40,
+			strengthen: 100,
+			bless: 50,
+			wound: 45,
+			poison: 30,
+			immobilize: 100,
+			muddle: 25,
+			curse: 100,
+			specificElement: 60,
+			wildElement: 90,
+			jump: 35,
+		}),
+	},
 };
 
 export const PricingStrategies = {

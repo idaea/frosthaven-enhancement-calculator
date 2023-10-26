@@ -80,8 +80,10 @@ const icons = {
 	generalPersistent,
 } as const;
 
+export type IconId = keyof typeof icons;
+
 interface Props {
-	readonly icon: keyof typeof icons;
+	readonly icon: IconId;
 	readonly width: string;
 	readonly alt?: string;
 }

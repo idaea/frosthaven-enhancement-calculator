@@ -1,93 +1,10 @@
 import { ReactElement, ReactNode, useState } from "react";
 import { Container, Row, Col, Button, Badge, Form } from "react-bootstrap";
 import GloomhavenIcon from "./gloomhavenIcon";
-import { capitalCase, pascalCase } from "change-case";
-import { mapValues } from "lodash";
 import { PricingStrategies, PricingStrategyType } from "./PricingStrategies";
+import { EffectTypes } from "./buildEffects";
 
 const iconWidth = "16px";
-
-interface Effect {
-	cost: number;
-	/** The cost in Gloomhaven Digital */
-	costGD: number;
-	title: string;
-	icon: string;
-}
-
-function buildEffects<TKey extends string>(
-	rawDefinitions: Record<
-		TKey,
-		{
-			cost: number;
-			costGD: number;
-			title?: string;
-			icon?: string;
-		}
-	>
-): Record<TKey, Effect> {
-	return mapValues(rawDefinitions, ({ cost, costGD, title, icon }, key) => ({
-		cost,
-		costGD,
-		title: title ?? capitalCase(key),
-		icon: icon ?? `general${pascalCase(key)}`,
-	}));
-}
-
-// "low" values from https://i.imgur.com/nEsIUvG.png
-// recommended by FH dev here: https://www.reddit.com/r/Gloomhaven/comments/uo3som/comment/i8cej68/
-
-const playerPlusOneAbilityLines = buildEffects({
-	move: { cost: 30, costGD: 20 },
-	attack: { cost: 50, costGD: 35 },
-	range: { cost: 30, costGD: 20 },
-	target: { cost: 75, costGD: 40 },
-	shield: { cost: 80, costGD: 60 },
-	retaliate: { cost: 60, costGD: 40 },
-	pierce: { cost: 30, costGD: 15, icon: "statusEffectPierce" },
-	heal: { cost: 30, costGD: 20 },
-	push: { cost: 30, costGD: 20, icon: "statusEffectPush" },
-	pull: { cost: 20, costGD: 15, icon: "statusEffectPull" },
-	teleport: { cost: 50, costGD: 50 },
-});
-
-const summonPlusOneAbilityLines = buildEffects({
-	hp: { cost: 40, costGD: 30, title: "HP", icon: "generalHeal" },
-	move: { cost: 60, costGD: 40 },
-	attack: { cost: 100, costGD: 60 },
-	range: { cost: 50, costGD: 40 },
-});
-
-const baseOtherEffects = buildEffects({
-	regenerate: {
-		cost: 40,
-		costGD: 40,
-		icon: "statusEffectRegenerate",
-	},
-	ward: { cost: 75, costGD: 40, icon: "statusEffectWard" },
-	strengthen: {
-		cost: 100,
-		costGD: 100,
-		icon: "statusEffectStrengthen",
-	},
-	bless: { cost: 75, costGD: 50, icon: "statusEffectBless" },
-	wound: { cost: 75, costGD: 45, icon: "statusEffectWound" },
-	poison: { cost: 50, costGD: 30, icon: "statusEffectPoison" },
-	immobilize: {
-		cost: 150,
-		costGD: 100,
-		icon: "statusEffectImmobilize",
-	},
-	muddle: { cost: 40, costGD: 25, icon: "statusEffectMuddle" },
-	curse: { cost: 150, costGD: 100, icon: "statusEffectCurse" },
-	specificElement: {
-		cost: 100,
-		costGD: 60,
-		icon: "elementFire",
-	},
-	wildElement: { cost: 150, costGD: 90, icon: "elementAll" },
-	jump: { cost: 60, costGD: 35, icon: "generalJump" },
-});
 
 const stickerTypes = {
 	playerPlus1: { title: "Player" },
@@ -95,11 +12,6 @@ const stickerTypes = {
 	attackHex: { title: "Attack Hex" },
 	otherEffect: { title: "Other Effect" },
 };
-
-type PricingMethod =
-	| "frosthaven"
-	| "frosthaven_non_permanent"
-	| "gloomhaven_digital";
 
 export function EnhancementCalculator() {
 	const [selectedStickerType, setSelectedStickerType] = useState(""); // +1 / summon +1 / attack hex / else
@@ -143,34 +55,25 @@ export function EnhancementCalculator() {
 		return true;
 	}
 
-	function getEffectCost(effect: Effect): number {
-		return useGDCosts ? effect.costGD : effect.cost;
-	}
-
-	function getScaledCost(
-		costVariants: Record<PricingMethod, number[]>,
-		i: number
-	): number {
-		return costVariants[pricingStrategyType][i];
-	}
-
 	function calculateCost() {
 		let cost = 0;
 
 		if (selectedStickerType === "playerPlus1") {
 			if (selectedPlayerPlusOneEffect) {
-				cost += getEffectCost(
-					playerPlusOneAbilityLines[selectedPlayerPlusOneEffect]
-				);
+				cost +=
+					pricingStrategy.effects.playerPlusOne[
+						selectedPlayerPlusOneEffect as EffectTypes.PlayerPlusOne
+					].cost;
 			} else {
 				// cannot yet calculate
 				return 0;
 			}
 		} else if (selectedStickerType === "summonPlus1") {
 			if (summonPlusOneAbility) {
-				cost += getEffectCost(
-					summonPlusOneAbilityLines[summonPlusOneAbility]
-				);
+				cost +=
+					pricingStrategy.effects.summonPlusOne[
+						summonPlusOneAbility as EffectTypes.SummonPlusOne
+					].cost;
 			} else {
 				// cannot yet calculate
 				return 0;
@@ -182,7 +85,10 @@ export function EnhancementCalculator() {
 			);
 		} else if (selectedStickerType === "otherEffect") {
 			if (baseOtherEffect) {
-				cost += getEffectCost(baseOtherEffects[baseOtherEffect]);
+				cost +=
+					pricingStrategy.effects.other[
+						baseOtherEffect as EffectTypes.Other
+					].cost;
 			} else {
 				// cannot yet calculate
 				return 0;
@@ -401,124 +307,116 @@ export function EnhancementCalculator() {
 		}
 	}
 
-	for (let baseOtherEffectKey in baseOtherEffects) {
-		if (baseOtherEffects.hasOwnProperty(baseOtherEffectKey)) {
-			let effect = baseOtherEffects[baseOtherEffectKey];
+	for (const [baseOtherEffectKey, effect] of Object.entries(
+		pricingStrategy.effects.other
+	)) {
+		let xs = 6;
+		let md = 3;
+		if (
+			baseOtherEffectKey === "specificElement" ||
+			baseOtherEffectKey === "wildElement" ||
+			baseOtherEffectKey === "jump"
+		) {
+			xs = 12;
+		}
 
-			let xs = 6;
-			let md = 3;
-			if (
-				baseOtherEffectKey === "specificElement" ||
-				baseOtherEffectKey === "wildElement" ||
-				baseOtherEffectKey === "jump"
-			) {
-				xs = 12;
-			}
+		if (baseOtherEffectKey === "specificElement") {
+			md = 6;
+		}
 
-			if (baseOtherEffectKey === "specificElement") {
-				md = 6;
-			}
-
-			let icons = <GloomhavenIcon icon={effect.icon} width={iconWidth} />;
-			if (baseOtherEffectKey === "specificElement") {
-				icons = (
-					<span>
-						<GloomhavenIcon icon="elementAir" width={iconWidth} />
-						<GloomhavenIcon icon="elementLight" width={iconWidth} />
-						<GloomhavenIcon icon="elementIce" width={iconWidth} />
-						<GloomhavenIcon icon="elementDark" width={iconWidth} />
-						<GloomhavenIcon icon="elementFire" width={iconWidth} />
-						<GloomhavenIcon icon="elementEarth" width={iconWidth} />
-					</span>
-				);
-			}
-
-			baseOtherEffectColumns.push(
-				<Col
-					className="enhancement-col"
-					key={baseOtherEffectKey}
-					xs={xs}
-					md={md}
-				>
-					<Button
-						variant="outline-secondary"
-						block
-						onClick={() => baseOtherEffectClick(baseOtherEffectKey)}
-						className={
-							baseOtherEffectKey === baseOtherEffect
-								? "active"
-								: undefined
-						}
-					>
-						{effect.title} {icons} ({getEffectCost(effect)}g)
-					</Button>
-				</Col>
+		let icons = <GloomhavenIcon icon={effect.icon} width={iconWidth} />;
+		if (baseOtherEffectKey === "specificElement") {
+			icons = (
+				<span>
+					<GloomhavenIcon icon="elementAir" width={iconWidth} />
+					<GloomhavenIcon icon="elementLight" width={iconWidth} />
+					<GloomhavenIcon icon="elementIce" width={iconWidth} />
+					<GloomhavenIcon icon="elementDark" width={iconWidth} />
+					<GloomhavenIcon icon="elementFire" width={iconWidth} />
+					<GloomhavenIcon icon="elementEarth" width={iconWidth} />
+				</span>
 			);
 		}
+
+		baseOtherEffectColumns.push(
+			<Col
+				className="enhancement-col"
+				key={baseOtherEffectKey}
+				xs={xs}
+				md={md}
+			>
+				<Button
+					variant="outline-secondary"
+					block
+					onClick={() => baseOtherEffectClick(baseOtherEffectKey)}
+					className={
+						baseOtherEffectKey === baseOtherEffect ? "active" : undefined
+					}
+				>
+					{effect.title} {icons} ({effect.cost}g)
+				</Button>
+			</Col>
+		);
 	}
 
-	for (let playerPlusOneAbilityLine in playerPlusOneAbilityLines) {
-		if (playerPlusOneAbilityLines.hasOwnProperty(playerPlusOneAbilityLine)) {
-			let ability = playerPlusOneAbilityLines[playerPlusOneAbilityLine];
-
-			playerPlusOneAbilityColumns.push(
-				<Col
-					className="enhancement-col"
-					key={playerPlusOneAbilityLine}
-					xs={6}
-					md={2}
+	for (const [playerPlusOneAbilityLine, ability] of Object.entries(
+		pricingStrategy.effects.playerPlusOne
+	)) {
+		playerPlusOneAbilityColumns.push(
+			<Col
+				className="enhancement-col"
+				key={playerPlusOneAbilityLine}
+				xs={6}
+				md={2}
+			>
+				<Button
+					variant="outline-secondary"
+					block
+					onClick={() =>
+						playerPlusOneAbilityClick(playerPlusOneAbilityLine)
+					}
+					className={
+						selectedPlayerPlusOneEffect === playerPlusOneAbilityLine
+							? "active"
+							: undefined
+					}
 				>
-					<Button
-						variant="outline-secondary"
-						block
-						onClick={() =>
-							playerPlusOneAbilityClick(playerPlusOneAbilityLine)
-						}
-						className={
-							selectedPlayerPlusOneEffect === playerPlusOneAbilityLine
-								? "active"
-								: undefined
-						}
-					>
-						{ability.title}{" "}
-						<GloomhavenIcon icon={ability.icon} width={iconWidth} /> (
-						{getEffectCost(ability)}g)
-					</Button>
-				</Col>
-			);
-		}
+					{ability.title}{" "}
+					<GloomhavenIcon icon={ability.icon} width={iconWidth} /> (
+					{ability.cost}g)
+				</Button>
+			</Col>
+		);
 	}
 
-	for (let summonPlusOneAbilityLine in summonPlusOneAbilityLines) {
-		if (summonPlusOneAbilityLines.hasOwnProperty(summonPlusOneAbilityLine)) {
-			let ability = summonPlusOneAbilityLines[summonPlusOneAbilityLine];
-
-			summonPlusOneAbilityColumns.push(
-				<Col
-					className="enhancement-col"
-					key={summonPlusOneAbilityLine}
-					xs={6}
-					md={3}
+	for (const [summonPlusOneAbilityLine, ability] of Object.entries(
+		pricingStrategy.effects.summonPlusOne
+	)) {
+		summonPlusOneAbilityColumns.push(
+			<Col
+				className="enhancement-col"
+				key={summonPlusOneAbilityLine}
+				xs={6}
+				md={3}
+			>
+				<Button
+					variant="outline-secondary"
+					block
+					onClick={() =>
+						summonPlusOneAbilityClick(summonPlusOneAbilityLine)
+					}
+					className={
+						summonPlusOneAbility === summonPlusOneAbilityLine
+							? "active"
+							: undefined
+					}
 				>
-					<Button
-						variant="outline-secondary"
-						block
-						onClick={() =>
-							summonPlusOneAbilityClick(summonPlusOneAbilityLine)
-						}
-						className={
-							summonPlusOneAbility === summonPlusOneAbilityLine
-								? "active"
-								: undefined
-						}
-					>
-						{ability.title}{" "}
-						<GloomhavenIcon icon={ability.icon} width={iconWidth} /> (
-						{getEffectCost(ability)}g)
-					</Button>
-				</Col>
-			);
-		}
+					{ability.title}{" "}
+					<GloomhavenIcon icon={ability.icon} width={iconWidth} /> (
+					{ability.cost}g)
+				</Button>
+			</Col>
+		);
 	}
 
 	return (
@@ -546,7 +444,7 @@ export function EnhancementCalculator() {
 							damage traps as "
 							<GloomhavenIcon icon="generalAttack" width="12px" /> +1"
 							enhancements (
-							{getEffectCost(playerPlusOneAbilityLines.attack)} gold),
+							{pricingStrategy.effects.playerPlusOne.attack.cost} gold),
 							treat healing traps as "
 							<GloomhavenIcon
 								alt="Heal Icon"
@@ -554,15 +452,15 @@ export function EnhancementCalculator() {
 								width="12px"
 							/>{" "}
 							+1" enhancements (
-							{getEffectCost(playerPlusOneAbilityLines.heal)} gold), and
-							treat the movement of tokens and tiles as "
+							{pricingStrategy.effects.playerPlusOne.heal.cost} gold),
+							and treat the movement of tokens and tiles as "
 							<GloomhavenIcon
 								alt="Move Icon"
 								icon="generalMove"
 								width="12px"
 							/>{" "}
 							+1" enhancements (
-							{getEffectCost(playerPlusOneAbilityLines.move)} gold).
+							{pricingStrategy.effects.playerPlusOne.move.cost} gold).
 						</p>
 						<Form>
 							<Form.Group as={Form.Row}>
