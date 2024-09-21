@@ -124,12 +124,12 @@ export function EnhancementCalculator() {
 			enhancerLevel
 		);
 
-		if (pricingStrategyType === "frosthaven_non_permanent") {
-			cost = Math.ceil(cost * 0.8);
-		}
-
 		if (enhancerLevel >= 2) {
 			cost -= 10;
+		}
+
+		if (pricingStrategyType === "frosthaven_non_permanent") {
+			cost = Math.ceil(cost * 0.8);
 		}
 
 		return cost;
