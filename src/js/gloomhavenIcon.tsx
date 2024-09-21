@@ -1,3 +1,5 @@
+import enhancementPlusOne from "../images/icons/enhancement-stickers/fh-plus-one-sticker.png";
+
 import elementAir from "../images/icons/elements/fh-air-color-icon.png";
 import elementAll from "../images/icons/elements/fh-wild-color-icon.png";
 import elementDark from "../images/icons/elements/fh-dark-color-icon.png";
@@ -78,6 +80,8 @@ const icons = {
 	generalTeleport,
 	generalLost,
 	generalPersistent,
+
+	enhancementPlusOne,
 } as const;
 
 export type IconId = keyof typeof icons;

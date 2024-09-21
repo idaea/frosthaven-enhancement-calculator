@@ -3,6 +3,7 @@ import { Container, Row, Col, Button, Badge, Form } from "react-bootstrap";
 import GloomhavenIcon from "./gloomhavenIcon";
 import { PricingStrategies, PricingStrategyType } from "./PricingStrategies";
 import { EffectTypes } from "./buildEffects";
+import { DotExplanations } from "./DotExplanations";
 
 const iconWidth = "16px";
 
@@ -478,6 +479,8 @@ export function EnhancementCalculator() {
 								</Col>
 							</Form.Row>
 						</Form>
+
+						<DotExplanations />
 
 						<p className="mt-4">
 							Some enhancements do not fall neatly into the categories on
